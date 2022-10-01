@@ -1,0 +1,5 @@
+repository:
+  name: "wallabag2readwise"
+  description: "wallabag2readwise"
+  homepage: "https://rwxd.github.io/wallabag2readwise/"
+  topics: "wallabag, readwise"
