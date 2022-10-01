@@ -1,5 +1,4 @@
 repository:
   name: "wallabag2readwise"
-  description: "wallabag2readwise"
-  homepage: "https://rwxd.github.io/wallabag2readwise/"
-  topics: "wallabag, readwise"
+  description: "Sync wallabag annotations to readwise highlights"
+  topics: "wallabag, readwise, sync"
