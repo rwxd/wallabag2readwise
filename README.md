@@ -46,8 +46,8 @@ services:
       WALLABAG_URL: ''
       WALLABAG_USER: ''
       WALLABAG_PASSWORD: ''
-	  WALLABAG_CLIENT_ID: ''
-	  WALLABAG_CLIENT_SECRET: ''
+      WALLABAG_CLIENT_ID: ''
+      WALLABAG_CLIENT_SECRET: ''
     # env_file:
     #  - .env
 ```
