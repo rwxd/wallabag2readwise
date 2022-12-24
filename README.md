@@ -39,7 +39,7 @@ version: "3.9"
 services:
   wallabag2readwise:
     image: ghcr.io/rwxd/wallabag2readwise:latest
-	container_name: wallabag2readwise
+    container_name: wallabag2readwise
     restart: unless-stopped
     environment:
       READWISE_TOKEN: ''
