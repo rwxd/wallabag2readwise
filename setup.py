@@ -1,5 +1,6 @@
 from setuptools import setup
 from os import path
+from subprocess import check_output
 
 with open("./requirements.txt") as f:
     required = f.read().splitlines()
@@ -8,9 +9,18 @@ this_directory = path.abspath(path.dirname(__file__))
 with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
+version = '1.2.0'
+
+try:
+    version = (
+        check_output(['git', 'describe', '--tags']).strip().decode().replace('v', '')
+    )
+except:
+    pass
+
 setup(
     name='wallabag2readwise',
-    version='1.1.1',
+    version=version,
     description='Push wallabag annotations to Readwise highlights',
     long_description=long_description,
     long_description_content_type='text/markdown',
