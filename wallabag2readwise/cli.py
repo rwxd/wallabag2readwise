@@ -43,7 +43,9 @@ def daemon(
     wallabag_client_id: str = typer.Option(..., envvar='WALLABAG_CLIENT_ID'),
     wallabag_client_secret: str = typer.Option(..., envvar='WALLABAG_CLIENT_SECRET'),
     readwise_token: str = typer.Option(..., envvar='READWISE_TOKEN', prompt=True),
-    wait_time: int = typer.Option(60, help='time to wait between runs in minutes'),
+    wait_time: int = typer.Option(
+        60, help='time to wait between runs in minutes', envvar='WAIT_TIME'
+    ),
 ):
 
     console.print(f'> Starting daemon with {wait_time} minutes wait time')
