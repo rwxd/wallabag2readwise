@@ -3,6 +3,7 @@ from wallabag2readwise.readwise import ReadwiseConnector, new_highlights
 from wallabag2readwise.wallabag import WallabagConnector
 from datetime import datetime
 from wallabag2readwise.logging import logger
+from wallabag2readwise.output import console
 
 
 def push_annotations(wallabag: WallabagConnector, readwise: ReadwiseConnector):
@@ -28,10 +29,11 @@ def push_annotations(wallabag: WallabagConnector, readwise: ReadwiseConnector):
             for article in readwise_articles:
                 if article.title == entry.title:
                     highlights = list(readwise.get_book_highlights(article.id))
-                    print(f'Found {len(highlights)} for {entry.title} in Readwise')
+                    console.print(
+                        f'=> Found {len(highlights)} Readwise highlights for "{entry.title}"'
+                    )
                     for annotation in annotations:
                         if annotation.quote not in [i.text for i in highlights]:
-                            logger.debug('Adding annotation')
                             new_highlights(readwise, entry, [annotation])
                         else:
                             logger.debug('Annotation already present')
@@ -39,4 +41,5 @@ def push_annotations(wallabag: WallabagConnector, readwise: ReadwiseConnector):
                     break
             else:
                 logger.info(f'Entry "{entry.title}" not present in Readwise')
+                console.print(f'==> Adding article "{entry.title}"')
                 new_highlights(readwise, entry, annotations)

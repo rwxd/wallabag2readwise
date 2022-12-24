@@ -1,7 +1,7 @@
 import logging
 from os import getenv
 
-log_level = getenv('LOG_LEVEL', 'DEBUG')
+log_level = getenv('LOG_LEVEL', 'WARNING')
 logger = logging.getLogger('wallabag2readwise')
 
 format = '%(levelname)s - %(asctime)s - %(name)s - %(message)s'
