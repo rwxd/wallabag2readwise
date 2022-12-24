@@ -21,7 +21,7 @@ pipx install wallabag2readwise
 ### Commands
 
 ```bash
-wallabag2readwise push
+wallabag2readwise
 ```
 
 ### Configuration

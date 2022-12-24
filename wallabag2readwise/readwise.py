@@ -3,8 +3,15 @@ from wallabag2readwise.logging import logger
 from typing import Generator
 from datetime import datetime
 from typing import Optional
+from ratelimit import limits, RateLimitException
+from backoff import on_exception, expo
 
 from wallabag2readwise.models import Annotation, Entry, ReadwiseBook, ReadwiseHighlight
+from wallabag2readwise.output import console
+
+
+class ReadwiseRateLimitException(Exception):
+    pass
 
 
 class ReadwiseConnector:
@@ -26,17 +33,35 @@ class ReadwiseConnector:
         )
         return session
 
-    def get(self, endpoint: str, params: dict = {}) -> requests.Response:
+    @on_exception(expo, ReadwiseRateLimitException, max_tries=8)
+    @on_exception(expo, RateLimitException, max_tries=8)
+    @limits(calls=230, period=60)
+    def _request(
+        self, method: str, endpoint: str, params: dict = {}, data: dict = {}
+    ) -> requests.Response:
         url = self.url + endpoint
-        logger.debug(f'Getting "{url}" with params: {params}')
-        response = self._session.get(url, params=params)
+        logger.debug(f'Calling "{method}" on "{url}" with params: {params}')
+        response = self._session.request(method, url, params=params, json=data)
+        if response.status_code == 429:
+            raise ReadwiseRateLimitException()
         response.raise_for_status()
+        return response
+
+    def get(self, endpoint: str, params: dict = {}) -> requests.Response:
+        logger.debug(f'Getting "{endpoint}" with params: {params}')
+        response = self._request('GET', endpoint, params=params)
+        return response
+
+    @on_exception(expo, RateLimitException, max_tries=8)
+    @limits(calls=19, period=60)
+    def get_with_limit_19(self, endpoint: str, params: dict = {}) -> requests.Response:
+        response = self.get(endpoint, params)
         return response
 
     def post(self, endpoint: str, data: dict = {}) -> requests.Response:
         url = self.url + endpoint
         logger.debug(f'Posting "{url}" with data: {data}')
-        response = self._session.post(url, json=data)
+        response = self._request('POST', endpoint, data=data)
         response.raise_for_status()
         return response
 
@@ -103,6 +128,7 @@ def new_highlights(
     readwise: ReadwiseConnector, entry: Entry, annotations: list[Annotation]
 ):
     for item in annotations:
+        console.print(f'==> Adding highlight')
         readwise.create_highlight(
             item.quote,
             entry.title,
