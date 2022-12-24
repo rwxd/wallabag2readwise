@@ -69,7 +69,8 @@ wallabag2readwise push
 Run continuously and push new annotations to Readwise every 60 minutes.
 (The container is automatically in daemon mode.)
 
-```bash wallabag2readwise daemon --wait-time 60
+```bash
+wallabag2readwise daemon --wait-time 60
 ```
 
 ### Configuration
