@@ -56,8 +56,8 @@ class ReadwiseConnector:
         return response
 
     @on_exception(expo, RateLimitException, max_tries=8)
-    @limits(calls=19, period=60)
-    def get_with_limit_19(self, endpoint: str, params: dict = {}) -> requests.Response:
+    @limits(calls=20, period=60)
+    def get_with_limit_20(self, endpoint: str, params: dict = {}) -> requests.Response:
         response = self.get(endpoint, params)
         return response
 
@@ -72,7 +72,7 @@ class ReadwiseConnector:
         page = 1
         page_size = 1000
         while True:
-            data = self.get_with_limit_19(
+            data = self.get_with_limit_20(
                 '/books',
                 {'page': page, 'page_size': page_size, 'category': category},
             ).json()
@@ -91,7 +91,7 @@ class ReadwiseConnector:
         page = 1
         page_size = 1000
         while True:
-            data = self.get_with_limit_19(
+            data = self.get_with_limit_20(
                 '/highlights',
                 {'page': page, 'page_size': page_size, 'book_id': book_id},
             ).json()
