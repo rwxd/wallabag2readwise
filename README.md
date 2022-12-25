@@ -13,7 +13,7 @@ Rate limiting of the Readwise API is supported.
 ### CLI
 
 ```bash
-python3 -m pip install wallabag2readwise
+pip intall -U wallabag2readwise
 ```
 
 or with [pipx](https://github.com/pypa/pipx)
