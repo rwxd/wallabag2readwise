@@ -30,7 +30,7 @@ def push_annotations(wallabag: WallabagConnector, readwise: ReadwiseConnector):
                 if article.title == entry.title:
                     highlights = list(readwise.get_book_highlights(article.id))
                     console.print(
-                        f'=> Found {len(highlights)} Readwise highlights for "{entry.title}"'
+                        f'=> Found {len(highlights)} wallabag highlights for "{entry.title}"'
                     )
                     for annotation in annotations:
                         if annotation.quote not in [i.text for i in highlights]:
@@ -41,5 +41,5 @@ def push_annotations(wallabag: WallabagConnector, readwise: ReadwiseConnector):
                     break
             else:
                 logger.info(f'Entry "{entry.title}" not present in Readwise')
-                console.print(f'==> Adding article "{entry.title}"')
+                console.print(f'==> Adding article "{entry.title}" to Readwise')
                 new_highlights(readwise, entry, annotations)

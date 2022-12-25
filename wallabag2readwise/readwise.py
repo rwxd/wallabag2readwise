@@ -45,7 +45,7 @@ class ReadwiseConnector:
         response = self._session.request(method, url, params=params, json=data)
         while response.status_code == 429:
             seconds = int(response.headers['Retry-After'])
-            logger.warning(f'Rate limited, retrying in {seconds} seconds')
+            logger.warning(f'Rate limited by Readwise, retrying in {seconds} seconds')
             sleep(seconds)
             response = self._session.request(method, url, params=params, json=data)
         response.raise_for_status()
@@ -133,7 +133,7 @@ def new_highlights(
     readwise: ReadwiseConnector, entry: Entry, annotations: list[Annotation]
 ):
     for item in annotations:
-        console.print(f'==> Adding highlight')
+        console.print(f'==> Adding highlight to Readwise')
         readwise.create_highlight(
             item.quote,
             entry.title,
