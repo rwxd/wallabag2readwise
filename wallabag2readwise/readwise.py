@@ -3,7 +3,7 @@ from wallabag2readwise.logging import logger
 from typing import Generator
 from datetime import datetime
 from typing import Optional
-from ratelimit import limits, RateLimitException
+from ratelimit import limits, RateLimitException, sleep_and_retry
 from backoff import on_exception, expo
 from time import sleep
 
@@ -35,6 +35,7 @@ class ReadwiseConnector:
         return session
 
     @on_exception(expo, RateLimitException, max_tries=8)
+    @sleep_and_retry
     @limits(calls=240, period=60)
     def _request(
         self, method: str, endpoint: str, params: dict = {}, data: dict = {}
@@ -56,6 +57,7 @@ class ReadwiseConnector:
         return response
 
     @on_exception(expo, RateLimitException, max_tries=8)
+    @sleep_and_retry
     @limits(calls=20, period=60)
     def get_with_limit_20(self, endpoint: str, params: dict = {}) -> requests.Response:
         response = self.get(endpoint, params)
