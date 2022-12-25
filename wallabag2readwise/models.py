@@ -3,17 +3,25 @@ from datetime import datetime
 
 
 @dataclass
-class Entry:
+class WallabagTag:
+    id: str
+    label: str
+    slug: str
+
+
+@dataclass
+class WallabagEntry:
     id: str
     title: str
     content: str
     url: str
     hashed_url: str
     annotations: list
+    tags: list[WallabagTag]
 
 
 @dataclass
-class Annotation:
+class WallabagAnnotation:
     id: str
     text: str
     quote: str
@@ -26,6 +34,12 @@ class ReadwiseBook:
     id: str
     title: str
     source: str
+
+
+@dataclass
+class ReadwiseTag:
+    id: str
+    name: str
 
 
 @dataclass
