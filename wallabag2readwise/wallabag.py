@@ -3,7 +3,7 @@ from wallabag2readwise.logging import logger
 from typing import Generator
 from datetime import datetime
 
-from wallabag2readwise.models import Annotation, Entry
+from wallabag2readwise.models import WallabagAnnotation, WallabagEntry, WallabagTag
 
 
 class WallabagConnector:
@@ -58,7 +58,7 @@ class WallabagConnector:
         response.raise_for_status()
         return response
 
-    def get_entries(self) -> Generator[Entry, None, None]:
+    def get_entries(self) -> Generator[WallabagEntry, None, None]:
         page = 1
         perPage = 100
         while True:
@@ -66,23 +66,26 @@ class WallabagConnector:
                 '/api/entries.json', {'page': page, 'perPage': perPage}
             ).json()
             for entry in data['_embedded']['items']:
-                yield Entry(
+                yield WallabagEntry(
                     id=entry['id'],
                     title=entry['title'],
                     url=entry['url'],
                     hashed_url=entry['hashed_url'],
                     content=entry['content'],
                     annotations=entry['annotations'],
+                    tags=[WallabagTag(**tag) for tag in entry['tags']],
                 )
 
             if page == data['pages']:
                 break
             page += 1
 
-    def get_annotations(self, entry_id: str) -> Generator[Annotation, None, None]:
+    def get_annotations(
+        self, entry_id: str
+    ) -> Generator[WallabagAnnotation, None, None]:
         data = self.get(f'/api/annotations/{entry_id}.json').json()
         for item in data['rows']:
-            yield Annotation(
+            yield WallabagAnnotation(
                 id=item['id'],
                 text=item['text'],
                 quote=item['quote'],
