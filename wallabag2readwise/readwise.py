@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Optional
 from ratelimit import limits, RateLimitException
 from backoff import on_exception, expo
+from time import sleep
 
 from wallabag2readwise.models import Annotation, Entry, ReadwiseBook, ReadwiseHighlight
 from wallabag2readwise.output import console
@@ -33,17 +34,19 @@ class ReadwiseConnector:
         )
         return session
 
-    @on_exception(expo, ReadwiseRateLimitException, max_tries=8)
     @on_exception(expo, RateLimitException, max_tries=8)
-    @limits(calls=230, period=60)
+    @limits(calls=240, period=60)
     def _request(
         self, method: str, endpoint: str, params: dict = {}, data: dict = {}
     ) -> requests.Response:
         url = self.url + endpoint
         logger.debug(f'Calling "{method}" on "{url}" with params: {params}')
         response = self._session.request(method, url, params=params, json=data)
-        if response.status_code == 429:
-            raise ReadwiseRateLimitException()
+        while response.status_code == 429:
+            seconds = int(response.headers['Retry-After'])
+            logger.warning(f'Rate limited, retrying in {seconds} seconds')
+            sleep(seconds)
+            response = self._session.request(method, url, params=params, json=data)
         response.raise_for_status()
         return response
 
@@ -69,7 +72,7 @@ class ReadwiseConnector:
         page = 1
         page_size = 1000
         while True:
-            data = self.get(
+            data = self.get_with_limit_19(
                 '/books',
                 {'page': page, 'page_size': page_size, 'category': category},
             ).json()
@@ -88,7 +91,7 @@ class ReadwiseConnector:
         page = 1
         page_size = 1000
         while True:
-            data = self.get(
+            data = self.get_with_limit_19(
                 '/highlights',
                 {'page': page, 'page_size': page_size, 'book_id': book_id},
             ).json()
