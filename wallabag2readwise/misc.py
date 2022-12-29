@@ -62,3 +62,11 @@ def push_annotations(wallabag: WallabagConnector, readwise: ReadwiseConnector):
                     f'==> Adding article "{wallabag_entry.title}" to Readwise'
                 )
                 new_highlights(readwise, wallabag_entry, annotations)
+                for new_articles in readwise.get_books('articles'):
+                    if new_articles.title == wallabag_entry.title:
+                        for tag in wallabag_entry.tags:
+                            console.print(
+                                f'==> Adding tag "{tag.label}" to Readwise article'
+                            )
+                            readwise.add_tag(new_articles.id, tag.label)
+                        break
