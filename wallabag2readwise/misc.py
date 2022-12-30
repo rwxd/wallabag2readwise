@@ -12,9 +12,8 @@ def get_readwise_articles_with_retries(
     readwise: ReadwiseConnector, retries: int = 15, timeout: int = 5
 ) -> list[ReadwiseBook]:
     """We try to circumvent readwise JSONDecodeError with retries."""
-    maximum = retries
     counter = 0
-    while True:
+    while counter < retries:
         try:
             readwise_articles = list(readwise.get_books('articles')) + list(
                 readwise.get_books('books')
@@ -23,12 +22,12 @@ def get_readwise_articles_with_retries(
         except JSONDecodeError as e:
             counter = counter + 1
             logger.error(f'Error while getting Readwise articles: \"{e}\"')
-            if counter >= maximum:
-                raise
             logger.error(
                 f'Retrying in {timeout} seconds, {retries - counter} retries left'
             )
             sleep(timeout)
+
+    raise ValueError('Could not get Readwise articles')
 
 
 def push_annotations(wallabag: WallabagConnector, readwise: ReadwiseConnector):
