@@ -1,16 +1,38 @@
-from wallabag2readwise.models import WallabagAnnotation
+from requests import JSONDecodeError
+from wallabag2readwise.models import ReadwiseBook, WallabagAnnotation
 from wallabag2readwise.readwise import ReadwiseConnector, new_highlights
 from wallabag2readwise.wallabag import WallabagConnector
 from datetime import datetime
 from wallabag2readwise.logging import logger
 from wallabag2readwise.output import console
+from time import sleep
+
+
+def get_readwise_articles_with_retries(
+    readwise: ReadwiseConnector, retries: int = 15, timeout: int = 5
+) -> list[ReadwiseBook]:
+    """We try to circumvent readwise JSONDecodeError with retries."""
+    maximum = retries
+    counter = 0
+    while True:
+        try:
+            readwise_articles = list(readwise.get_books('articles')) + list(
+                readwise.get_books('books')
+            )
+            return readwise_articles
+        except JSONDecodeError as e:
+            counter = counter + 1
+            logger.error(f'Error while getting Readwise articles: \"{e}\"')
+            if counter >= maximum:
+                raise
+            logger.error(
+                f'Retrying in {timeout} seconds, {retries - counter} retries left'
+            )
+            sleep(timeout)
 
 
 def push_annotations(wallabag: WallabagConnector, readwise: ReadwiseConnector):
-    readwise_articles = list(readwise.get_books('articles')) + list(
-        readwise.get_books('books')
-    )
-
+    readwise_articles = get_readwise_articles_with_retries(readwise)
     for wallabag_entry in wallabag.get_entries():
         if len(wallabag_entry.annotations) > 0:
             annotations = [
@@ -62,7 +84,7 @@ def push_annotations(wallabag: WallabagConnector, readwise: ReadwiseConnector):
                     f'==> Adding article "{wallabag_entry.title}" to Readwise'
                 )
                 new_highlights(readwise, wallabag_entry, annotations)
-                for new_articles in readwise.get_books('articles'):
+                for new_articles in get_readwise_articles_with_retries(readwise):
                     if new_articles.title == wallabag_entry.title:
                         for tag in wallabag_entry.tags:
                             console.print(

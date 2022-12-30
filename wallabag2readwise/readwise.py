@@ -86,6 +86,7 @@ class ReadwiseConnector:
                 '/books',
                 {'page': page, 'page_size': page_size, 'category': category},
             ).json()
+
             for book in data['results']:
                 yield ReadwiseBook(
                     id=book['id'], title=book['title'], source=book['source']
