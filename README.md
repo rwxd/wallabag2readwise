@@ -73,6 +73,12 @@ Run continuously and push new annotations to Readwise every 60 minutes.
 wallabag2readwise daemon --wait-time 60
 ```
 
+#### Import all Wallabag entries to Readwise reader
+
+```bash
+wallabag2readwise reader
+```
+
 ### Configuration
 
 Get a new Readwise API Token from <https://readwise.io/access_token>.

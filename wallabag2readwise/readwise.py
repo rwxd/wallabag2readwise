@@ -6,6 +6,7 @@ from typing import Optional
 from ratelimit import limits, RateLimitException, sleep_and_retry
 from backoff import on_exception, expo
 from time import sleep
+from dataclasses import dataclass
 
 from wallabag2readwise.models import (
     WallabagAnnotation,
@@ -172,4 +173,62 @@ def new_highlights(
             source_url=entry.url,
             note=item.text,
             category='articles',
+        )
+
+
+class ReadwiseReaderConnector:
+    def __init__(
+        self,
+        token: str,
+    ):
+        self.token = token
+        self.url = 'https://readwise.io/api/v3'
+
+    @property
+    def _session(self) -> requests.Session:
+        session = requests.Session()
+        session.headers.update(
+            {
+                'Accept': 'application/json',
+                'Authorization': f'Token {self.token}',
+            }
+        )
+        return session
+
+    @on_exception(expo, RateLimitException, max_tries=8)
+    @sleep_and_retry
+    @limits(calls=20, period=60)
+    def _request(
+        self, method: str, endpoint: str, params: dict = {}, data: dict = {}
+    ) -> requests.Response:
+        url = self.url + endpoint
+        logger.debug(f'Calling "{method}" on "{url}" with params: {params}')
+        response = self._session.request(method, url, params=params, json=data)
+        while response.status_code == 429:
+            seconds = int(response.headers['Retry-After'])
+            logger.warning(f'Rate limited by Readwise, retrying in {seconds} seconds')
+            sleep(seconds)
+            response = self._session.request(method, url, params=params, data=data)
+        response.raise_for_status()
+        return response
+
+    def get(self, endpoint: str, params: dict = {}) -> requests.Response:
+        logger.debug(f'Getting "{endpoint}" with params: {params}')
+        return self._request('GET', endpoint, params=params)
+
+    def post(self, endpoint: str, data: dict = {}) -> requests.Response:
+        url = self.url + endpoint
+        logger.debug(f'Posting "{url}" with data: {data}')
+        response = self._request('POST', endpoint, data=data)
+        response.raise_for_status()
+        return response
+
+    def create(self, url: str, saved_using: str = 'wallabag', tags: list[str] = []):
+        _ = self.post(
+            '/save/',
+            {
+                'url': url,
+                'saved_using': saved_using,
+                'tags': tags,
+            },
         )
