@@ -88,9 +88,12 @@ def reader(
     for entry in wallabag_entries:
         console.print(f'=> Importing {entry.title}')
         location = 'archive' if entry.archived else 'new'
-        readwise.create(
-            entry.url, tags=[t.label for t in entry.tags], location=location
-        )
+        try:
+            readwise.create(
+                entry.url, tags=[t.label for t in entry.tags], location=location
+            )
+        except Exception as e:
+            console.print(f'==> Error: {e}')
 
 
 @app.command()
