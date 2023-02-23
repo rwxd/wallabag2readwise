@@ -2,11 +2,10 @@ import requests
 from wallabag2readwise.logging import logger
 from typing import Generator
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 from ratelimit import limits, RateLimitException, sleep_and_retry
 from backoff import on_exception, expo
 from time import sleep
-from dataclasses import dataclass
 
 from wallabag2readwise.models import (
     WallabagAnnotation,
@@ -223,12 +222,19 @@ class ReadwiseReaderConnector:
         response.raise_for_status()
         return response
 
-    def create(self, url: str, saved_using: str = 'wallabag', tags: list[str] = []):
+    def create(
+        self,
+        url: str,
+        saved_using: str = 'wallabag',
+        tags: list[str] = [],
+        location: Literal['new', 'later', 'archive', 'feed'] = 'new',
+    ):
         _ = self.post(
             '/save/',
             {
                 'url': url,
                 'saved_using': saved_using,
                 'tags': tags,
+                'location': location,
             },
         )

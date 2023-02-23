@@ -74,6 +74,7 @@ class WallabagConnector:
                     content=entry['content'],
                     annotations=entry['annotations'],
                     tags=[WallabagTag(**tag) for tag in entry['tags']],
+                    archived=True if entry['is_archived'] == 1 else False,
                 )
 
             if page == data['pages']:

@@ -17,6 +17,7 @@ class WallabagEntry:
     url: str
     hashed_url: str
     annotations: list
+    archived: bool
     tags: list[WallabagTag]
 
 
