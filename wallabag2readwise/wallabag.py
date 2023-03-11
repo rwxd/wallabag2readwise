@@ -1,8 +1,9 @@
-import requests
-from wallabag2readwise.logging import logger
-from typing import Generator
 from datetime import datetime
+from typing import Generator
 
+import requests
+
+from wallabag2readwise.logging import logger
 from wallabag2readwise.models import WallabagAnnotation, WallabagEntry, WallabagTag
 
 

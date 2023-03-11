@@ -1,15 +1,18 @@
-from requests import JSONDecodeError
-from wallabag2readwise.models import ReadwiseBook, WallabagAnnotation
-from wallabag2readwise.readwise import ReadwiseConnector, new_highlights
-from wallabag2readwise.wallabag import WallabagConnector
 from datetime import datetime
-from wallabag2readwise.logging import logger
-from wallabag2readwise.output import console
 from time import sleep
+
+from readwise import Readwise
+from readwise.models import ReadwiseBook
+from requests import JSONDecodeError
+
+from wallabag2readwise.logging import logger
+from wallabag2readwise.models import WallabagAnnotation, WallabagEntry
+from wallabag2readwise.output import console
+from wallabag2readwise.wallabag import WallabagConnector
 
 
 def get_readwise_articles_with_retries(
-    readwise: ReadwiseConnector, retries: int = 15, timeout: int = 5
+    readwise: Readwise, retries: int = 15, timeout: int = 5
 ) -> list[ReadwiseBook]:
     """We try to circumvent readwise JSONDecodeError with retries."""
     maximum = retries
@@ -31,7 +34,7 @@ def get_readwise_articles_with_retries(
             sleep(timeout)
 
 
-def push_annotations(wallabag: WallabagConnector, readwise: ReadwiseConnector):
+def push_annotations(wallabag: WallabagConnector, readwise: Readwise):
     readwise_articles = get_readwise_articles_with_retries(readwise)
     for wallabag_entry in wallabag.get_entries():
         if len(wallabag_entry.annotations) > 0:
@@ -52,7 +55,8 @@ def push_annotations(wallabag: WallabagConnector, readwise: ReadwiseConnector):
                 if readwise_article.title == wallabag_entry.title:
                     highlights = list(readwise.get_book_highlights(readwise_article.id))
                     console.print(
-                        f'=> Found {len(highlights)} wallabag highlights for "{wallabag_entry.title}"'
+                        f'=> Found {len(highlights)} wallabag highlights '
+                        f'for "{wallabag_entry.title}"'
                     )
                     for annotation in annotations:
                         if annotation.quote not in [i.text for i in highlights]:
@@ -63,19 +67,23 @@ def push_annotations(wallabag: WallabagConnector, readwise: ReadwiseConnector):
                     readwise_article_tags = list(
                         readwise.get_book_tags(readwise_article.id)
                     )
-                    for tag in wallabag_entry.tags:
-                        if tag.label not in [i.name for i in readwise_article_tags]:
+                    for wallabag_tag in wallabag_entry.tags:
+                        if wallabag_tag.label not in [
+                            i.name for i in readwise_article_tags
+                        ]:
                             console.print(
-                                f'==> Adding tag "{tag.label}" to Readwise article'
+                                f'==> Adding tag "{wallabag_tag.label}" to Readwise article'
                             )
-                            readwise.add_tag(readwise_article.id, tag.label)
+                            readwise.add_tag(readwise_article.id, wallabag_tag.label)
 
-                    for tag in readwise_article_tags:
-                        if tag.name not in [i.label for i in wallabag_entry.tags]:
+                    for readwise_tag in readwise_article_tags:
+                        if readwise_tag.name not in [
+                            i.label for i in wallabag_entry.tags
+                        ]:
                             console.print(
-                                f'==> Deleting tag "{tag.name}" from Readwise article'
+                                f'==> Deleting tag "{readwise_tag.name}" from Readwise article'
                             )
-                            readwise.delete_tag(readwise_article.id, tag.id)
+                            readwise.delete_tag(readwise_article.id, readwise_tag.id)
 
                     break
             else:
@@ -86,9 +94,26 @@ def push_annotations(wallabag: WallabagConnector, readwise: ReadwiseConnector):
                 new_highlights(readwise, wallabag_entry, annotations)
                 for new_articles in get_readwise_articles_with_retries(readwise):
                     if new_articles.title == wallabag_entry.title:
-                        for tag in wallabag_entry.tags:
+                        for wallabag_tag in wallabag_entry.tags:
                             console.print(
-                                f'==> Adding tag "{tag.label}" to Readwise article'
+                                f'==> Adding tag "{wallabag_tag.label}" to Readwise article'
                             )
-                            readwise.add_tag(new_articles.id, tag.label)
+                            readwise.add_tag(new_articles.id, wallabag_tag.label)
                         break
+
+
+def new_highlights(
+    readwise: Readwise,
+    entry: WallabagEntry,
+    annotations: list[WallabagAnnotation],
+):
+    for item in annotations:
+        console.print('==> Adding highlight to Readwise')
+        readwise.create_highlight(
+            item.quote,
+            entry.title,
+            highlighted_at=item.created_at,
+            source_url=entry.url,
+            note=item.text,
+            category='articles',
+        )
