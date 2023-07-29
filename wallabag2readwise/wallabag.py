@@ -42,6 +42,7 @@ class WallabagConnector:
                 'password': self.password,
             },
         )
+        response.raise_for_status()
         data = response.json()
         return data['access_token']
 
@@ -94,3 +95,8 @@ class WallabagConnector:
                 created_at=datetime.strptime(item['created_at'], '%y-%m-%dT%H:%M+%S'),
                 ranges=item['ranges'],
             )
+
+    def create_entry(self, url: str, params: dict = {}):
+        params.update({'url': url})
+        result = self.post('/api/entries.json', data=params)
+        result.raise_for_status()
