@@ -77,7 +77,7 @@ jobs:
 
       - name: Log in to Docker Hub
         if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags') || github.ref == 'main')
-        uses: docker/login-action@d398f07826957cd0a18ea1b059cf1207835e60bc
+        uses: docker/login-action@1f36f5b7a2d2f7bfd524795fc966e6d88c37baa9
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
